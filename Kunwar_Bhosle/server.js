@@ -32,15 +32,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Express Session Middleware with MongoDB Store
+const sessionStore = MongoStore.create({
+  mongoUrl: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gymdb',
+  ttl: 24 * 60 * 60 // 1 day session TTL
+});
+
+sessionStore.on('error', (err) => {
+  console.error('Session store connection error:', err.message);
+});
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'supersecretkey',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gymdb',
-      ttl: 24 * 60 * 60 // 1 day session TTL
-    }),
+    store: sessionStore,
     cookie: {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
